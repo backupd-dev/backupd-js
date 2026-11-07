@@ -10,7 +10,7 @@
 
 | Package                        | What it is                                                                     |
 | ------------------------------ | ------------------------------------------------------------------------------ |
-| [`backupd`](packages/cli)      | The CLI. `npx backupd`, or a standalone binary.                                |
+| [`@backupd/cli`](packages/cli) | The CLI, `backupd`. `npx @backupd/cli`, or a standalone binary.                |
 | [`@backupd/sdk`](packages/sdk) | TypeScript SDK with a Promise API and an [Effect](https://effect.website) API. |
 
 ## CLI
@@ -18,7 +18,7 @@
 ```sh
 curl -fsSL https://backupd.dev/install | sh      # macOS, Linux
 irm https://backupd.dev/install.ps1 | iex        # Windows (PowerShell)
-npm i -g backupd                                 # anywhere with Node.js 22.15+
+npm i -g @backupd/cli                            # anywhere with Node.js 22.15+
 backupd login
 backupd db list
 backupd backup now app-prod --wait
@@ -35,8 +35,8 @@ backupd restore latest --db app-prod --local --key backupd-laptop.agekey --to "$
 In CI, set `BACKUPD_API_KEY` (create one in Settings → API & MCP) and `BACKUPD_WORKSPACE`:
 
 ```yaml
-- run: npx backupd backup now app-prod --wait # before running migrations
-- run: npx backupd status --max-age 26 # fails if any database has no recent backup
+- run: npx @backupd/cli backup now app-prod --wait # before running migrations
+- run: npx @backupd/cli status --max-age 26 # fails if any database has no recent backup
 ```
 
 Full reference: [docs.backupd.dev/docs/cli](https://docs.backupd.dev/docs/cli).

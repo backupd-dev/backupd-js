@@ -1,5 +1,5 @@
 {
-  "name": "backupd",
+  "name": "@backupd/cli",
   "version": "0.1.0",
   "description": "The backupd CLI: back up, restore and manage your databases from the terminal and CI.",
   "keywords": [

@@ -20,9 +20,10 @@ The SDK talks only to backupd's public API, described at https://api.backupd.dev
 
 1. Bump `version` in `packages/sdk/package.json`, `packages/cli/package.json`, `packages/cli/src/version.ts` and `SDK_VERSION` in `packages/sdk/src/client.ts`.
 2. `bun run check-types && bun run test && bun run build`
-3. Publish to npm, SDK first:
+3. Publish to npm, SDK first. Use `bun publish`, which rewrites the CLI's `workspace:*` dependency; npm then asks for your passkey or 2FA code in the browser:
    ```sh
-   cd packages/sdk && npm publish
-   cd ../cli && npm publish
+   cd packages/sdk && bun publish
+   cd ../cli && bun publish
    ```
+   Both packages belong to the `backupd` npm organisation: `@backupd/sdk` and `@backupd/cli` (whose command is `backupd`).
 4. Tag and push: `git tag v0.1.0 && git push --tags`. The Release workflow builds the standalone binaries and attaches them to a GitHub release; https://backupd.dev/install downloads from the latest release.

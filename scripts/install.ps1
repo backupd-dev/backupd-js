@@ -15,7 +15,7 @@ $BaseUrl = if ($env:BACKUPD_DOWNLOAD_URL) { $env:BACKUPD_DOWNLOAD_URL } else { "
 $InstallDir = if ($env:BACKUPD_INSTALL_DIR) { $env:BACKUPD_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA "backupd\bin" }
 
 if (-not [Environment]::Is64BitOperatingSystem) {
-  throw "backupd needs 64-bit Windows. Use npm instead: npm i -g backupd"
+  throw "backupd needs 64-bit Windows. Use npm instead: npm i -g @backupd/cli"
 }
 
 $Asset = "backupd-windows-x64.exe"

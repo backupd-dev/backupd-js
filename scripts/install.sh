@@ -50,13 +50,13 @@ case "$(uname -s)" in
   Linux) os="linux" ;;
   Darwin) os="darwin" ;;
   MINGW* | MSYS* | CYGWIN*) fail "on Windows, run: irm https://backupd.dev/install.ps1 | iex" ;;
-  *) fail "unsupported OS: $(uname -s). Use npm instead: npm i -g backupd" ;;
+  *) fail "unsupported OS: $(uname -s). Use npm instead: npm i -g @backupd/cli" ;;
 esac
 
 case "$(uname -m)" in
   x86_64 | amd64) arch="x64" ;;
   arm64 | aarch64) arch="arm64" ;;
-  *) fail "unsupported CPU: $(uname -m). Use npm instead: npm i -g backupd" ;;
+  *) fail "unsupported CPU: $(uname -m). Use npm instead: npm i -g @backupd/cli" ;;
 esac
 
 # An x64 shell on Apple silicon (Rosetta) should still get the native binary.

@@ -1,12 +1,12 @@
-# backupd
+# @backupd/cli
 
 The [backupd](https://backupd.dev) CLI: back up, restore and manage your databases from the terminal and CI.
 
 ```sh
-npx backupd login
+npx @backupd/cli login
 ```
 
-Or install it: `npm i -g backupd`, or a standalone binary with `curl -fsSL https://backupd.dev/install | sh`.
+Or install it: `npm i -g @backupd/cli` (the command is `backupd`), or a standalone binary with `curl -fsSL https://backupd.dev/install | sh`.
 
 ## Commands
 

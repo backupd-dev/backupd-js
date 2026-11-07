@@ -6,7 +6,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "bun run --filter '@backupd/sdk' build && bun run --filter 'backupd' build",
+    "build": "bun run --filter '@backupd/sdk' build && bun run --filter '@backupd/cli' build",
     "check-types": "tsc -b packages/sdk packages/cli",
     "test": "tsc -b packages/sdk && vitest run",
     "lint": "oxlint",
