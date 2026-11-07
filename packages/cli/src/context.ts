@@ -72,6 +72,9 @@ export const client = Effect.gen(function* () {
   return makeClient({
     apiKey,
     baseUrl: yield* apiUrl,
+    onRateLimited: (seconds) => {
+      process.stderr.write(`Rate limited by the API; retrying in ${seconds}s…\n`);
+    },
     userAgent: `backupd-cli/${VERSION}`,
     workspace,
   });

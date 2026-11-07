@@ -27,6 +27,8 @@ export interface ClientOptions {
   readonly fetch?: typeof globalThis.fetch | undefined;
   /** Prepended to the User-Agent header, e.g. `my-tool/1.2`. */
   readonly userAgent?: string | undefined;
+  /** Called before the SDK waits out a rate limit and retries. */
+  readonly onRateLimited?: ((retryAfterSeconds: number, operation: string) => void) | undefined;
 }
 
 export type ApiFailure = ApiError | ConfigError | NetworkError | ResponseError;
@@ -198,10 +200,13 @@ export const makeClient = (options: ClientOptions = {}) => {
           error.status === 429 &&
           error.retryAfter !== undefined &&
           error.retryAfter <= 60,
-        (error) =>
-          Effect.flatMap(Effect.sleep(Duration.seconds((error as ApiError).retryAfter ?? 1)), () =>
+        (error) => {
+          const { operation, retryAfter = 1 } = error as ApiError;
+          options.onRateLimited?.(retryAfter, operation);
+          return Effect.flatMap(Effect.sleep(Duration.seconds(retryAfter)), () =>
             attempt(left - 1),
-          ),
+          );
+        },
       );
     return attempt(3);
   };

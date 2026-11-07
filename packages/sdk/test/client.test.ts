@@ -118,9 +118,16 @@ describe("errors", () => {
           : json({ email: "a@b.c", id: "u1", name: "Ada" });
       },
     });
-    const me = await new Backupd({ apiKey: "k", baseUrl: BASE, fetch: api.fetch }).account.me();
+    const waits: number[] = [];
+    const me = await new Backupd({
+      apiKey: "k",
+      baseUrl: BASE,
+      fetch: api.fetch,
+      onRateLimited: (seconds) => waits.push(seconds),
+    }).account.me();
     expect(me.name).toBe("Ada");
     expect(attempts).toBe(2);
+    expect(waits).toEqual([0.01]);
   });
 
   it("doesn't retry a manual-backup quota error (429 without Retry-After)", async () => {
