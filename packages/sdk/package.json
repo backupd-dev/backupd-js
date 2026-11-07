@@ -1,0 +1,59 @@
+{
+  "name": "@backupd/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for backupd: back up, restore and manage databases from code.",
+  "keywords": [
+    "backup",
+    "backupd",
+    "convex",
+    "effect",
+    "mongodb",
+    "mysql",
+    "postgres",
+    "restore"
+  ],
+  "homepage": "https://backupd.dev/sdk",
+  "bugs": "https://github.com/backupd-dev/backupd-js/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/backupd-dev/backupd-js.git",
+    "directory": "packages/sdk"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./effect": {
+      "types": "./dist/effect.d.ts",
+      "default": "./dist/effect.js"
+    },
+    "./local": {
+      "types": "./dist/local.d.ts",
+      "default": "./dist/local.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist tsconfig.tsbuildinfo && tsc -b",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "age-encryption": "^0.3.1",
+    "effect": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=22.15"
+  }
+}

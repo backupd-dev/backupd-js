@@ -1,0 +1,33 @@
+# Push a tag like v0.1.0 to build the standalone binaries and attach them to a
+# GitHub release. Publishing to npm is done by hand (see CONTRIBUTING.md).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run check-types
+      - run: bun run test
+      - run: bun scripts/compile.ts
+      - name: Smoke test
+        run: packages/cli/dist/bin/backupd-linux-x64 --version
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            packages/cli/dist/bin/*

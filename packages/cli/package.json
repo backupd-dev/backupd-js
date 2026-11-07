@@ -1,0 +1,49 @@
+{
+  "name": "backupd",
+  "version": "0.1.0",
+  "description": "The backupd CLI: back up, restore and manage your databases from the terminal and CI.",
+  "keywords": [
+    "backup",
+    "backupd",
+    "cli",
+    "convex",
+    "mongodb",
+    "mysql",
+    "postgres",
+    "restore"
+  ],
+  "homepage": "https://backupd.dev/cli",
+  "bugs": "https://github.com/backupd-dev/backupd-js/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/backupd-dev/backupd-js.git",
+    "directory": "packages/cli"
+  },
+  "bin": {
+    "backupd": "./dist/backupd.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist && bun build src/bin.ts --target node --outfile dist/backupd.js",
+    "compile": "bun ../../scripts/compile.ts",
+    "dev": "bun src/bin.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "@backupd/sdk": "workspace:*",
+    "@effect/platform-node": "4.1.2",
+    "age-encryption": "^0.3.1",
+    "effect": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=22.15"
+  }
+}
