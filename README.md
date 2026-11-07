@@ -70,6 +70,24 @@ await Effect.runPromise(program.pipe(Effect.provide(Backupd.layer())));
 
 Full reference: [docs.backupd.dev/docs/sdk](https://docs.backupd.dev/docs/sdk).
 
+## Agent skills
+
+[`skills/`](skills) holds skills that teach coding agents (Claude Code, Cursor, Codex, OpenCode and others) to use backupd safely:
+
+```sh
+npx skills add backupd-dev/backupd-js
+```
+
+| Skill                                                | For                                       |
+| ---------------------------------------------------- | ----------------------------------------- |
+| [`backupd-cli`](skills/backupd-cli/SKILL.md)         | Running `backupd` in a terminal           |
+| [`backupd-ci`](skills/backupd-ci/SKILL.md)           | GitHub Actions and other pipelines        |
+| [`backupd-restore`](skills/backupd-restore/SKILL.md) | Restores, including with your own key     |
+| [`backupd-sdk`](skills/backupd-sdk/SKILL.md)         | TypeScript with `@backupd/sdk`            |
+| [`backupd-api`](skills/backupd-api/SKILL.md)         | The HTTP API from curl or other languages |
+
+When a CLI flag, SDK method or API behaviour changes, update the matching skill in the same PR. Docs: [docs.backupd.dev/docs/agent-skills](https://docs.backupd.dev/docs/agent-skills).
+
 ## Development
 
 Needs [Bun](https://bun.sh) 1.4+ and Node.js 22.15+.
