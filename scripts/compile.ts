@@ -10,7 +10,15 @@ import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const TARGETS = ["linux-x64", "linux-arm64", "darwin-x64", "darwin-arm64", "windows-x64"] as const;
+const TARGETS = [
+  "linux-x64",
+  "linux-arm64",
+  "linux-x64-musl",
+  "linux-arm64-musl",
+  "darwin-x64",
+  "darwin-arm64",
+  "windows-x64",
+] as const;
 
 const root = join(import.meta.dir, "..");
 const entry = join(root, "packages/cli/src/bin.ts");

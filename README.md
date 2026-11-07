@@ -16,7 +16,9 @@
 ## CLI
 
 ```sh
-curl -fsSL https://backupd.dev/install | sh      # or: npm i -g backupd
+curl -fsSL https://backupd.dev/install | sh      # macOS, Linux
+irm https://backupd.dev/install.ps1 | iex        # Windows (PowerShell)
+npm i -g backupd                                 # anywhere with Node.js 22.15+
 backupd login
 backupd db list
 backupd backup now app-prod --wait
