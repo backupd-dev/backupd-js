@@ -8,7 +8,7 @@
   "scripts": {
     "build": "bun run --filter '@backupd/sdk' build && bun run --filter 'backupd' build",
     "check-types": "tsc -b packages/sdk packages/cli",
-    "test": "vitest run",
+    "test": "tsc -b packages/sdk && vitest run",
     "lint": "oxlint",
     "format": "oxfmt",
     "format:check": "oxfmt --check"

@@ -27,6 +27,7 @@ export const restoreTool = (
   format: string | null,
   target: string,
   replace: boolean,
+  oplog = false,
 ): ToolCall | undefined => {
   switch (format) {
     case "pg_custom": {
@@ -44,7 +45,13 @@ export const restoreTool = (
     }
     case "mongo_archive": {
       return {
-        args: ["--archive", ...(replace ? ["--drop"] : []), "--uri", target],
+        args: [
+          "--archive",
+          ...(oplog ? ["--oplogReplay"] : []),
+          ...(replace ? ["--drop"] : []),
+          "--uri",
+          target,
+        ],
         command: "mongorestore",
       };
     }
@@ -181,7 +188,12 @@ const restore = Command.make(
             new ConfigError({ message: "--local needs --to <connection string>." }),
           );
         }
-        const tool = restoreTool(backup.format, target, flags.replace);
+        const tool = restoreTool(
+          backup.format,
+          target,
+          flags.replace,
+          backup.manifest?.oplog === true,
+        );
         if (!tool) {
           return yield* Effect.fail(
             new ConfigError({

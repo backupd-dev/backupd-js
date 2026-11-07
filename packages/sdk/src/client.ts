@@ -81,7 +81,10 @@ export interface RestoreHandle {
 export interface WaitOptions<A> {
   /** Give up after this long. Default 6 hours (the longest a backup may run). */
   readonly timeout?: Duration.Input | undefined;
-  /** Time between checks. Default 3 seconds. */
+  /**
+   * Time between checks. Default: 2 seconds, growing to 15 seconds for long
+   * runs, which keeps a six-hour wait well inside the API's rate limit.
+   */
   readonly interval?: Duration.Input | undefined;
   /** Called after every check, e.g. to show progress. */
   readonly onProgress?: ((value: A) => void) | undefined;
@@ -314,7 +317,9 @@ export const makeClient = (options: ClientOptions = {}) => {
   ) =>
     Effect.gen(function* () {
       const timeout = Duration.fromInputUnsafe(options.timeout ?? "6 hours");
-      const interval = Duration.fromInputUnsafe(options.interval ?? "3 seconds");
+      const fixed =
+        options.interval === undefined ? undefined : Duration.fromInputUnsafe(options.interval);
+      let next = Duration.seconds(2);
       const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(timeout);
       while (true) {
         const value = yield* check;
@@ -331,7 +336,12 @@ export const makeClient = (options: ClientOptions = {}) => {
             }),
           );
         }
-        yield* Effect.sleep(interval);
+        if (fixed) {
+          yield* Effect.sleep(fixed);
+        } else {
+          yield* Effect.sleep(next);
+          next = Duration.min(Duration.times(next, 1.5), Duration.seconds(15));
+        }
       }
     });
 

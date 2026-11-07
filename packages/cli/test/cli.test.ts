@@ -152,6 +152,9 @@ const backup = (overrides: Record<string, unknown> = {}) => ({
 
 const BASE_ROUTES: Record<string, Route> = {
   "/api-reference/account/me": () => ({ body: { email: "ada@acme.dev", id: "u_1", name: "Ada" } }),
+  "/api-reference/encryption/get": () => ({
+    body: { canManage: true, maxRecipients: 3, recipients: [], serviceRecipient: "age1service" },
+  }),
   "/api-reference/databases/list": () => ({ body: [database()] }),
   "/api-reference/workspace/list": () => ({ body: WORKSPACES }),
 };
@@ -218,6 +221,28 @@ describe("login", () => {
     expect(logout.code).toBe(0);
     expect(logout.stderr).toContain("revoked");
     expect((await run(["whoami"])).code).toBe(3);
+  }, 30_000);
+
+  it("doesn't guess between several workspaces without a terminal", async () => {
+    routes["/api-reference/workspace/list"] = () => ({
+      body: [
+        ...WORKSPACES,
+        { id: "org_2", name: "Side", region: "us", role: "member", slug: "side" },
+      ],
+    });
+    const result = await run(["login", "--with-key", "bkp_given"]);
+    expect(result.code).toBe(0);
+    expect(result.stderr).toContain("Pick one: backupd workspace use <acme|side>");
+    const config = JSON.parse(readFileSync(join(configDir, "config.json"), "utf8")) as Record<
+      string,
+      unknown
+    >;
+    expect(config.apiKey).toBe("bkp_given");
+    expect(config.workspace).toBeUndefined();
+    expect((await run(["workspace", "use", "side"])).code).toBe(0);
+    expect(JSON.parse(readFileSync(join(configDir, "config.json"), "utf8"))).toMatchObject({
+      workspace: { slug: "side" },
+    });
   }, 30_000);
 
   it("reports a denied sign-in", async () => {

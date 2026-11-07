@@ -213,6 +213,10 @@ export const Backup = Schema.Struct({
     Schema.Struct({ algorithm: Schema.String, recipients: Schema.Array(Schema.String) }),
   ),
   format: NullableString,
+  /** What the engine's dump tool recorded. `oplog` is set for MongoDB replica-set dumps. */
+  manifest: Schema.optionalKey(
+    Schema.NullOr(Schema.Struct({ oplog: Schema.optionalKey(Schema.Boolean) })),
+  ),
   restores: Schema.Array(RestoreRun),
   verificationDetails: Schema.NullOr(VerificationDetails),
 });

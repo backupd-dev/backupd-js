@@ -27,7 +27,7 @@ export const describeError = (error: unknown): Described => {
       if (status === 401) {
         return {
           exitCode: 3,
-          message: `${cross} ${message}. Run \`backupd login\` (or check BACKUPD_API_KEY).`,
+          message: `${cross} ${message.replace(/\.+$/u, "")}. Run \`backupd login\` (or check BACKUPD_API_KEY).`,
         };
       }
       if (status === 403) {

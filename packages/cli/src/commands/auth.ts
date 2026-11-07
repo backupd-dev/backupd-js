@@ -23,8 +23,12 @@ const chooseWorkspace = (workspaces: ReadonlyArray<Workspace>, wanted: string | 
     if (wanted) {
       return workspaces.find((w) => w.slug === wanted || w.id === wanted);
     }
-    if (workspaces.length <= 1 || !interactive()) {
+    if (workspaces.length <= 1) {
       return workspaces[0];
+    }
+    if (!interactive()) {
+      // Don't guess between several; `workspace use` or --workspace decides.
+      return undefined;
     }
     return yield* Prompt.run(
       Prompt.Select({
@@ -93,6 +97,10 @@ export const login = Command.make(
       yield* out.success(`Signed in as ${out.bold(me.email)}`);
       if (workspace) {
         yield* out.success(`Workspace: ${workspace.name} (${workspace.slug})`);
+      } else if (workspaces.length > 1) {
+        yield* out.warn(
+          `You're in ${workspaces.length} workspaces. Pick one: backupd workspace use <${workspaces.map((w) => w.slug).join("|")}>`,
+        );
       } else {
         yield* out.warn(
           "You're not in a workspace yet. Create one at https://console.backupd.dev.",

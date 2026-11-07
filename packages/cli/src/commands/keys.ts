@@ -57,6 +57,16 @@ const generate = Command.make(
         );
       }
       const api = yield* client;
+      // Check the API and the key limit first, so a failure never leaves a
+      // secret key on disk that was never added.
+      const existing = yield* api.keys.list();
+      if (existing.recipients.length >= existing.maxRecipients) {
+        return yield* Effect.fail(
+          new ConfigError({
+            message: `This workspace already has ${existing.maxRecipients} keys, the most it can hold. Revoke one first.`,
+          }),
+        );
+      }
       const key = yield* generateKey;
       // Save the secret before telling the API, so it can never be lost.
       yield* fs

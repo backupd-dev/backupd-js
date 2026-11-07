@@ -187,12 +187,15 @@ const get = Command.make("get", { backup: backupArg, db: dbFlag }, (flags) =>
   }),
 ).pipe(Command.withDescription("Show one backup, including its restore test."));
 
-const cancel = Command.make("cancel", { backup: backupArg }, ({ backup }) =>
-  Effect.gen(function* () {
-    const api = yield* client;
-    const result = yield* api.backups.cancel(backup);
-    yield* out.success(`Cancelled ${result.fileName}.`);
-  }),
+const cancel = Command.make(
+  "cancel",
+  { backup: Argument.String("backup").pipe(Argument.withDescription("Backup ID.")) },
+  ({ backup }) =>
+    Effect.gen(function* () {
+      const api = yield* client;
+      const result = yield* api.backups.cancel(backup);
+      yield* out.success(`Cancelled ${result.fileName}.`);
+    }),
 ).pipe(Command.withDescription("Stop a queued or running backup."));
 
 /** Writes a web stream to a file, or to stdout for `-`. */
