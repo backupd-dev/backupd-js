@@ -250,6 +250,8 @@ export const CreatedRestore = Schema.Struct({ restoreId: Schema.String });
 export const RestoreSummary = Schema.Struct({
   backupId: Schema.String,
   createdAt: Iso,
+  /** Erasure requests re-applied after the restore (null: none were due). */
+  erasuresApplied: Schema.optional(NullableNumber),
   error: NullableString,
   fileName: Schema.String,
   finishedAt: NullableIso,
@@ -288,3 +290,66 @@ export const AddedKey = Schema.Struct({ fingerprint: Schema.String, id: Schema.S
 export const RevokedKey = Schema.Struct({ fingerprint: Schema.String, label: Schema.String });
 
 export const Ok = Schema.Struct({ ok: Schema.Boolean });
+
+/* ------------------------------------------------------------------ */
+/* Erasure ledger                                                      */
+/* ------------------------------------------------------------------ */
+
+export const ErasureStep = Schema.Struct({
+  column: Schema.String,
+  schema: Schema.optional(Schema.String),
+  table: Schema.String,
+});
+export type ErasureStep = typeof ErasureStep.Type;
+
+export const ErasureRule = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  requests: Schema.Number,
+  steps: Schema.Array(ErasureStep),
+});
+export type ErasureRule = typeof ErasureRule.Type;
+
+export const ErasureRules = Schema.Struct({
+  automatic: Schema.Boolean,
+  engine: Engine,
+  rules: Schema.Array(ErasureRule),
+});
+export type ErasureRules = typeof ErasureRules.Type;
+
+export const ErasureRequest = Schema.Struct({
+  appliedCount: Schema.Number,
+  backupsHolding: Schema.Number,
+  clearsBy: NullableIso,
+  erasedAt: Iso,
+  id: Schema.String,
+  masked: Schema.Boolean,
+  reference: NullableString,
+  ruleId: Schema.String,
+  ruleName: Schema.String,
+  source: Schema.String,
+  value: Schema.String,
+});
+export type ErasureRequest = typeof ErasureRequest.Type;
+
+export const ErasureLedger = Schema.Struct({
+  canManage: Schema.Boolean,
+  requests: Schema.Array(ErasureRequest),
+});
+export type ErasureLedger = typeof ErasureLedger.Type;
+
+export const RecordedErasures = Schema.Struct({
+  duplicates: Schema.Number,
+  ids: Schema.Array(Schema.String),
+  recorded: Schema.Number,
+});
+export type RecordedErasures = typeof RecordedErasures.Type;
+
+export const ErasureScript = Schema.Struct({
+  count: Schema.Number,
+  engine: Engine,
+  requestIds: Schema.Array(Schema.String),
+  script: NullableString,
+  tool: Schema.NullOr(Schema.Literals(["psql", "mysql", "mongosh"])),
+});
+export type ErasureScript = typeof ErasureScript.Type;
