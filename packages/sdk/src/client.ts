@@ -11,7 +11,7 @@ import {
 import * as S from "./schemas.js";
 
 export const DEFAULT_BASE_URL = "https://api.backupd.dev";
-export const SDK_VERSION = "0.1.0";
+export const SDK_VERSION = "0.2.0";
 
 export interface ClientOptions {
   /** A `bkp_…` API key. Defaults to the `BACKUPD_API_KEY` environment variable. */
