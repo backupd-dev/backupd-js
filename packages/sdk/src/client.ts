@@ -33,6 +33,18 @@ export interface ClientOptions {
 
 export type ApiFailure = ApiError | ConfigError | NetworkError | ResponseError;
 
+export interface RecordErasuresInput {
+  readonly databaseId: string;
+  readonly ruleId: string;
+  /** One identifier per person, as the rule's columns hold it (an id, an email). Up to 100. */
+  readonly values: ReadonlyArray<string>;
+  /** Your reference, e.g. the request's ticket ID. */
+  readonly reference?: string | undefined;
+  /** When they were deleted from the live database (ISO 8601); default now. */
+  readonly erasedAt?: string | undefined;
+  readonly source?: "api" | "cli" | undefined;
+}
+
 export interface ListBackupsOptions {
   readonly databaseId?: string | undefined;
   /** Recently deleted backups instead of live ones. */
@@ -505,6 +517,43 @@ export const makeClient = (options: ClientOptions = {}) => {
         inWorkspace("databases.setStatus", S.DatabaseChange, { databaseId, status: "active" }),
       testConnection: (connection: Connection) =>
         inWorkspace("databases.testConnection", S.ConnectionTest, { connection }),
+    },
+    /**
+     * The erasure ledger: people erased from a live database, deleted again
+     * by every restore of an older backup (GDPR Art. 17).
+     */
+    erasures: {
+      list: (databaseId: string) => inWorkspace("erasures.list", S.ErasureLedger, { databaseId }),
+      /** A self-restore re-applied the script; counted on each request. */
+      markApplied: (
+        databaseId: string,
+        requestIds: ReadonlyArray<string>,
+        backupId?: string | undefined,
+      ) =>
+        inWorkspace("erasures.markApplied", S.Ok, {
+          databaseId,
+          requestIds,
+          ...(backupId ? { backupId } : {}),
+        }),
+      /** Record people erased from the live database. Owners and admins. */
+      record: (input: RecordErasuresInput) =>
+        inWorkspace("erasures.record", S.RecordedErasures, {
+          databaseId: input.databaseId,
+          ruleId: input.ruleId,
+          source: input.source ?? "api",
+          values: input.values,
+          ...(input.reference ? { reference: input.reference } : {}),
+          ...(input.erasedAt ? { erasedAt: input.erasedAt } : {}),
+        }),
+      rules: (databaseId: string) =>
+        inWorkspace("erasures.listRules", S.ErasureRules, { databaseId }),
+      /** The script a restore done outside backupd runs: requests newer than the backup. */
+      script: (databaseId: string, backupId?: string | undefined) =>
+        inWorkspace("erasures.script", S.ErasureScript, {
+          databaseId,
+          ...(backupId ? { backupId } : {}),
+        }),
+      withdraw: (requestId: string) => inWorkspace("erasures.withdraw", S.Ok, { requestId }),
     },
     keys: {
       add: (input: { readonly recipient: string; readonly label: string }) =>

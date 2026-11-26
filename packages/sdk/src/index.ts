@@ -75,6 +75,7 @@ export type {
   Download,
   DownloadOptions,
   ListBackupsOptions,
+  RecordErasuresInput,
   RestoreHandle,
   RestoreTarget,
   WaitOptions,

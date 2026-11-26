@@ -12,6 +12,7 @@ import { CliError, Command } from "effect/cli";
 import { login, logout, whoami, workspace } from "./commands/auth.js";
 import { backup } from "./commands/backups.js";
 import { db } from "./commands/databases.js";
+import { erasures } from "./commands/erasures.js";
 import { keys } from "./commands/keys.js";
 import { restoreCommand, restores } from "./commands/restores.js";
 import { status } from "./commands/status.js";
@@ -33,6 +34,7 @@ export const root = Command.make("backupd").pipe(
     restoreCommand,
     restores,
     keys,
+    erasures,
     status,
   ]),
   Command.withGlobalFlags(GLOBAL_FLAGS),

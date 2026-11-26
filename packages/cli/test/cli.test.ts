@@ -156,6 +156,9 @@ const BASE_ROUTES: Record<string, Route> = {
     body: { canManage: true, maxRecipients: 3, recipients: [], serviceRecipient: "age1service" },
   }),
   "/api-reference/databases/list": () => ({ body: [database()] }),
+  "/api-reference/erasures/script": () => ({
+    body: { count: 0, engine: "postgres", requestIds: [], script: null, tool: "psql" },
+  }),
   "/api-reference/workspace/list": () => ({ body: WORKSPACES }),
 };
 
@@ -487,4 +490,139 @@ describe("keys and local decryption", () => {
     const result = await run(["backup", "download", "bk_1", "--key", "wrong.agekey"], KEY);
     expect(result.code).toBe(1);
   }, 30_000);
+});
+
+describe("erasures", () => {
+  const RULES = {
+    automatic: true,
+    engine: "postgres",
+    rules: [
+      { id: "er_1", name: "Customer", requests: 0, steps: [{ column: "id", table: "users" }] },
+    ],
+  };
+
+  it("records identifiers against a rule by name", async () => {
+    routes["/api-reference/erasures/listRules"] = () => ({ body: RULES });
+    routes["/api-reference/erasures/record"] = (body) => ({
+      body: { duplicates: 1, ids: ["r1"], recorded: (body.values as string[]).length - 1 },
+    });
+    const result = await run(
+      [
+        "erasures",
+        "add",
+        "app",
+        "4821, jane@example.com",
+        "--rule",
+        "customer",
+        "--reference",
+        "DSR-7",
+      ],
+      KEY,
+    );
+    expect(result.code).toBe(0);
+    expect(result.stderr).toContain("Recorded 1 erasure on app");
+    const sent = seen.find((entry) => entry.path === "/api-reference/erasures/record")?.body;
+    expect(sent).toMatchObject({
+      databaseId: "db_1",
+      reference: "DSR-7",
+      ruleId: "er_1",
+      source: "cli",
+      values: ["4821", "jane@example.com"],
+    });
+  });
+
+  it("refuses an unknown rule", async () => {
+    routes["/api-reference/erasures/listRules"] = () => ({ body: RULES });
+    const result = await run(["erasures", "add", "app", "1", "--rule", "lead"], KEY);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain('No erasure rule "lead"');
+  });
+
+  it("prints the script for a backup", async () => {
+    routes["/api-reference/erasures/script"] = (body) => ({
+      body: {
+        count: 1,
+        engine: "postgres",
+        requestIds: ["r1"],
+        script: `-- for ${String(body.backupId)}\nbegin;\ncommit;\n`,
+        tool: "psql",
+      },
+    });
+    const result = await run(["erasures", "script", "app", "--backup", "bk_1"], KEY);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("-- for bk_1");
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "applies the script with psql and reports it",
+    async () => {
+      routes["/api-reference/erasures/script"] = () => ({
+        body: {
+          count: 2,
+          engine: "postgres",
+          requestIds: ["r1", "r2"],
+          script: 'begin;\ndelete from "users" where "id" = \'4821\';\ncommit;\n',
+          tool: "psql",
+        },
+      });
+      routes["/api-reference/erasures/markApplied"] = () => ({ body: { ok: true } });
+      const bin = mkdtempSync(join(tmpdir(), "backupd-fake-psql-"));
+      writeFileSync(
+        join(bin, "psql"),
+        `#!/bin/sh\nprintf '%s\\n' "$@" > "${workDir}/args.txt"\ncat > "${workDir}/stdin.sql"\n`,
+        { mode: 0o755 },
+      );
+      const result = await run(
+        [
+          "erasures",
+          "apply",
+          "app",
+          "--backup",
+          "bk_1",
+          "--target",
+          "postgres://u:p@localhost/staging",
+        ],
+        { ...KEY, PATH: `${bin}:${process.env.PATH ?? ""}` },
+      );
+      expect(result.stderr).toContain("Re-applied 2 erasure requests");
+      expect(result.code).toBe(0);
+      expect(readFileSync(join(workDir, "stdin.sql"), "utf8")).toContain("where \"id\" = '4821'");
+      expect(readFileSync(join(workDir, "args.txt"), "utf8")).toContain("ON_ERROR_STOP=1");
+      expect(
+        seen.find((entry) => entry.path === "/api-reference/erasures/markApplied")?.body,
+      ).toMatchObject({
+        backupId: "bk_1",
+        databaseId: "db_1",
+        requestIds: ["r1", "r2"],
+      });
+    },
+    30_000,
+  );
+
+  it.skipIf(process.platform === "win32")(
+    "exits non-zero when psql fails, without reporting it applied",
+    async () => {
+      routes["/api-reference/erasures/script"] = () => ({
+        body: {
+          count: 1,
+          engine: "postgres",
+          requestIds: ["r1"],
+          script: "begin;\n",
+          tool: "psql",
+        },
+      });
+      const bin = mkdtempSync(join(tmpdir(), "backupd-fake-psql-"));
+      writeFileSync(join(bin, "psql"), "#!/bin/sh\ncat > /dev/null\nexit 3\n", { mode: 0o755 });
+      const result = await run(
+        ["erasures", "apply", "app", "--target", "postgres://u:p@localhost/staging"],
+        { ...KEY, PATH: `${bin}:${process.env.PATH ?? ""}` },
+      );
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain("the erasures were not applied");
+      expect(seen.some((entry) => entry.path === "/api-reference/erasures/markApplied")).toBe(
+        false,
+      );
+    },
+    30_000,
+  );
 });

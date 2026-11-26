@@ -11,6 +11,7 @@ import { Json, client } from "../context.js";
 import * as out from "../output.js";
 import { backupId as resolveBackupId, findDatabase } from "../resolve.js";
 import { keyFlag, readIdentities } from "./backups.js";
+import { applyErasures } from "./erasures.js";
 
 /* ------------------------------------------------------------------ */
 /* Restoring on this machine                                           */
@@ -153,6 +154,12 @@ const restore = Command.make(
       ),
       Flag.withDefault(false),
     ),
+    skipErasures: Flag.Boolean("skip-erasures").pipe(
+      Flag.withDescription(
+        "With --local: don't re-apply the erasure ledger after restoring (people erased since the backup stay in the target).",
+      ),
+      Flag.withDefault(false),
+    ),
     replace: Flag.Boolean("replace").pipe(
       Flag.withDescription("Replace tables that already exist in the target."),
       Flag.withDefault(false),
@@ -211,6 +218,22 @@ const restore = Command.make(
         );
         yield* runTool(tool, yield* openBackup(file.stream, identities));
         yield* out.success("Restored.");
+        if (flags.skipErasures) {
+          yield* out.warn(
+            "Skipped the erasure ledger: run `backupd erasures apply` before anything reads the data.",
+          );
+          return;
+        }
+        const erased = yield* applyErasures(api, {
+          backupId: id,
+          databaseId: backup.database.id,
+          target,
+        });
+        if (erased > 0) {
+          yield* out.success(
+            `Re-applied ${erased} erasure request${erased === 1 ? "" : "s"} (people erased after this backup).`,
+          );
+        }
         return;
       }
 
